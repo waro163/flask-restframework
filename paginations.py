@@ -1,6 +1,6 @@
 from flask import request
 
-class BasePagination:
+class OldBasePagination:
     '''
     queryset should be model.query object
     model should contain to_json() method.
@@ -47,7 +47,7 @@ class BasePagination:
             "results": [item.to_json() for item in self.pagination.items]
         }
 
-class NewBasePagination:
+class BasePagination:
     '''
     queryset should be model.query object
     model should contain to_json() method.
