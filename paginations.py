@@ -51,6 +51,9 @@ class NewBasePagination:
     '''
     queryset should be model.query object
     model should contain to_json() method.
+    use example:
+        pagination = NewBasePagination(yourModel.query)
+        return jsonify(pagination.to_json())
     '''
     page = 1
     page_size = 5
