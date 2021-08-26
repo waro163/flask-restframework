@@ -11,6 +11,7 @@ class BaseTest(unittest.TestCase):
     def setUp(self) -> None:
         self.context = self.app.test_request_context()
         self.context.push()
+        self.client = self.app.test_client()
         return super().setUp()
     
     def tearDown(self) -> None:
