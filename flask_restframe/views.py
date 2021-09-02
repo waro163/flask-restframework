@@ -2,26 +2,35 @@ from flask import current_app, g
 from flask import views, jsonify, make_response
 from . import exceptions
 
+def exception_handler(exc:Exception):
+    '''
+    Returns the response that should be used for any given exception.
+    '''
+    response = jsonify({"message":exc.detail,
+                        "code":exc.code,
+                    })
+    response.status_code = exc.status_code
+    if isinstance(exc, (exceptions.NotAuthenticated, exceptions.AuthenticationFailed)):
+        # WWW-Authenticate header for 401 responses, else coerce to 403
+        if getattr(exc, 'auth_header', None):
+            response.headers["WWW-Authenticate"] = exc.auth_header
+        if getattr(exc, 'wait', None):
+            response.headers['Retry-After'] = '%d' % exc.wait
+    return response
+
+
 class APIView(views.MethodView):
 
     authentication_classes = current_app.AUTHENTICATION_CLASSES
     # throttle_classes = current_app.THROTTLE_CLASSES
     permission_classes = current_app.PERMISSION_CLASSES
+    exception_handler = current_app.EXCEPTION_HANDLER
 
     def dispatch_request(self, *args, **kwargs):
         try:
             self.initial()
         except Exception as exc:
-            response = jsonify({"message":exc.detail,
-                                    "code":exc.code,
-                                })
-            response.status_code = exc.status_code
-            if isinstance(exc, (exceptions.NotAuthenticated, exceptions.AuthenticationFailed)):
-                # WWW-Authenticate header for 401 responses, else coerce to 403
-                auth_header = self.authenticator.authenticate_header()
-                response.headers["WWW-Authenticate"] = auth_header
-                # response.headers['Retry-After'] = '%d' % exc.wait
-            return response
+            return self.handle_exception(exc)
         return super().dispatch_request(*args, **kwargs)
 
     def initial(self):
@@ -44,14 +53,15 @@ class APIView(views.MethodView):
     def perform_authentication(self):
         self.successful_authenticated = False
         for authenticator in self.get_authenticators():
-            self.authenticator = authenticator
             try:
                 user_auth_tuple = authenticator.authenticate()
-            except exceptions.APIException as e:
-                raise e
+            except exceptions.APIException as exc:
+                exc.auth_header = authenticator.authenticate_header()
+                raise exc
         
             if user_auth_tuple is not None:
                 self.successful_authenticated = True
+                self.authenticator = authenticator
                 g.current_user, g.auth_inf = user_auth_tuple
                 break
 
@@ -72,6 +82,23 @@ class APIView(views.MethodView):
         If request is not permitted, determine what kind of exception to raise.
         """
         if self.authenticators and not self.successful_authenticated:
-            raise exceptions.NotAuthenticated()
+            exc = exceptions.NotAuthenticated()
+            exc.auth_header = self.get_authenticate_header()
+            raise exc
         raise exceptions.PermissionDenied(detail=message, code=code)
 
+    def get_authenticate_header(self):
+        """
+        If a request is unauthenticated, determine the WWW-Authenticate
+        header to use for 401 responses, if any.
+        """
+        if self.authenticators:
+            return self.authenticators[0].authenticate_header()
+
+    def handle_exception(self, exc):
+        """
+        Handle any exception that occurs, by returning an appropriate response,
+        or re-raising the error.
+        """
+        exception_handler = self.exception_handler
+        return exception_handler(exc)
