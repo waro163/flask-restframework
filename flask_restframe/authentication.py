@@ -20,6 +20,12 @@ class BaseAuthentication:
     """
     All authentication classes should extend BaseAuthentication.
     """
+    def check_auth_inf(self, *args, **kwargs):
+        """
+        in authenticate() method we should call this method to check authorization information
+        if check error, return False and error message
+        """
+        return True, ""
 
     def authenticate(self):
         """
@@ -72,14 +78,13 @@ class BasicAuthentication(BaseAuthentication):
         userid, password = auth_parts[0], auth_parts[2]
         auth_inf = {"id":userid,"password":password}
 
-        try:
-            user = current_app.USER_CLASS(**auth_inf)
-        except Exception as e:
-            raise exceptions.AuthenticationFailed(e.__str__())
+        passed, msg = self.check_auth_inf(**auth_inf)
+        if not passed:
+            raise exceptions.AuthenticationFailed(msg)
 
-        g.current_user = user
+        g.current_user = current_app.USER_CLASS(**auth_inf)
         g.auth_inf = auth_inf
-        return user, auth_inf
+        return g.current_user, auth_inf
 
     def authenticate_header(self):
         return 'Basic realm="%s"' % self.www_authenticate_realm
@@ -88,10 +93,14 @@ class JWTAuthentication(BaseAuthentication):
     """
     HTTP Bearer authentication .
     """
+    def check_auth_inf(self, *args, **kwargs):
+        if "id" not in kwargs:
+            return False, "'id' field not found in jwt payload"
+        return True, ""
 
     def authenticate(self):
         """
-        Returns username and password if correct
+        Returns User and payload of jwt if correct
         using HTTP Bearer authentication.  Otherwise returns `None`.
         """
         auth = get_authorization_header(request).split()
@@ -114,6 +123,10 @@ class JWTAuthentication(BaseAuthentication):
             payload = jwt.decode(auth[1].decode("utf8"), secret, algorithms=["HS256", "RS256"])
         except Exception as e:
             raise exceptions.AuthenticationFailed(e.__str__())
+
+        passed, msg = self.check_auth_inf(**auth_inf)
+        if not passed:
+            raise exceptions.AuthenticationFailed(msg)
 
         g.current_user = current_app.USER_CLASS(**payload)
         g.auth_inf = payload
