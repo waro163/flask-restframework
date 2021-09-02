@@ -62,7 +62,6 @@ class APIView(views.MethodView):
             if user_auth_tuple is not None:
                 self.successful_authenticated = True
                 self.authenticator = authenticator
-                g.current_user, g.auth_inf = user_auth_tuple
                 break
 
     def check_permissions(self):
