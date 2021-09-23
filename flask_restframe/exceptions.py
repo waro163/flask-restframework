@@ -1,3 +1,5 @@
+
+from flask import jsonify
 from flask_restframe import status
 
 
@@ -60,3 +62,19 @@ class NotFound(APIException):
     status_code = status.HTTP_404_NOT_FOUND
     default_detail = 'Not found.'
     default_code = 'not_found'
+
+def exception_handler(exc:Exception):
+    '''
+    Returns the response that should be used for any given exception.
+    '''
+    response = jsonify({"message":exc.detail,
+                        "code":exc.code,
+                    })
+    response.status_code = exc.status_code
+    if isinstance(exc, (NotAuthenticated, AuthenticationFailed)):
+        # WWW-Authenticate header for 401 responses, else coerce to 403
+        if getattr(exc, 'auth_header', None):
+            response.headers["WWW-Authenticate"] = exc.auth_header
+        if getattr(exc, 'wait', None):
+            response.headers['Retry-After'] = '%d' % exc.wait
+    return response

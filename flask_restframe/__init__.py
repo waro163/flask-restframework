@@ -23,7 +23,7 @@ class RestFrame(object):
         app.config.setdefault('FLASK_RESTFRAME_USER_CLASS', "flask_restframe.user.BaseUser")
         app.config.setdefault('FLASK_RESTFRAME_AUTHENTICATION_CLASSES', '["flask_restframe.authentication.BasicAuthentication"]')
         app.config.setdefault('FLASK_RESTFRAME_PERMISSION_CLASSES', '["flask_restframe.permissions.AllowAny"]')
-        app.config.setdefault('FLASK_RESTFRAME_EXCEPTION_HANDLER', 'flask_restframe.views.exception_handler')
+        app.config.setdefault('FLASK_RESTFRAME_EXCEPTION_HANDLER', 'flask_restframe.exceptions.exception_handler')
 
         user_class_path = app.config.get("FLASK_RESTFRAME_USER_CLASS")
         user_cls = import_string(user_class_path)
