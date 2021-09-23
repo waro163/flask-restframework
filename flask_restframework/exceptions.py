@@ -1,6 +1,6 @@
 
 from flask import jsonify
-from flask_restframe import status
+from . import status
 
 
 class APIException(Exception):

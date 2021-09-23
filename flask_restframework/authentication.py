@@ -3,7 +3,7 @@ import binascii
 import jwt
 
 from flask import request, current_app, g
-from flask_restframe import exceptions
+from . import exceptions
 
 def get_authorization_header(request):
     """
