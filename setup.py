@@ -19,7 +19,7 @@ setup(
     ],
     classifiers=[
         'Environment :: Web Environment',
-        'Framework :: Flask'
+        'Framework :: Flask',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'License :: OSI Approved :: MIT License',
