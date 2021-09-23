@@ -4,10 +4,10 @@ from . import exceptions
 
 class APIView(views.MethodView):
 
-    authentication_classes = current_app.AUTHENTICATION_CLASSES
+    authentication_classes = getattr(current_app, "AUTHENTICATION_CLASSES",[])
     # throttle_classes = current_app.THROTTLE_CLASSES
-    permission_classes = current_app.PERMISSION_CLASSES
-    exception_handler = current_app.EXCEPTION_HANDLER
+    permission_classes = getattr(current_app, "PERMISSION_CLASSES",[])
+    exception_handler = getattr(current_app, "EXCEPTION_HANDLER", exceptions.exception_handler)
 
     def dispatch_request(self, *args, **kwargs):
         try:
