@@ -67,6 +67,12 @@ def exception_handler(exc:Exception):
     '''
     Returns the response that should be used for any given exception.
     '''
+    if not isinstance(exc, APIException):
+        return jsonify({
+            "message":exc.__str__(),
+            "code":'A server error occurred.'
+        }),status.HTTP_500_INTERNAL_SERVER_ERROR
+
     response = jsonify({"message":exc.detail,
                         "code":exc.code,
                     })
