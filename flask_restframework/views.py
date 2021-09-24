@@ -4,10 +4,9 @@ from . import exceptions
 
 class APIView(views.MethodView):
 
-    authentication_classes = getattr(current_app, "AUTHENTICATION_CLASSES",[])
-    # throttle_classes = current_app.THROTTLE_CLASSES
-    permission_classes = getattr(current_app, "PERMISSION_CLASSES",[])
-    exception_handler = getattr(current_app, "EXCEPTION_HANDLER", exceptions.exception_handler)
+    authentication_classes = []
+    # throttle_classes = []
+    permission_classes = []
 
     def dispatch_request(self, *args, **kwargs):
         try:
@@ -24,14 +23,16 @@ class APIView(views.MethodView):
         """
         Instantiates and returns the list of authenticators that this view can use.
         """
-        self.authenticators = [auth() for auth in self.authentication_classes]
+        global_auth_config = getattr(current_app,"AUTHENTICATION_CLASSES",[])
+        self.authenticators = [auth() for auth in self.authentication_classes or global_auth_config]
         return self.authenticators
 
     def get_permissions(self):
         """
         Instantiates and returns the list of permissions that this view requires.
         """
-        return [permission() for permission in self.permission_classes]
+        global_perm_config = getattr(current_app,"PERMISSION_CLASSES",[])
+        return [permission() for permission in self.permission_classes or global_perm_config]
 
     def perform_authentication(self):
         self.successful_authenticated = False
@@ -45,7 +46,9 @@ class APIView(views.MethodView):
             if user_auth_tuple is not None:
                 self.successful_authenticated = True
                 self.authenticator = authenticator
-                break
+                return
+        # not_authenticated
+        g.current_user = None
 
     def check_permissions(self):
         """
@@ -82,5 +85,5 @@ class APIView(views.MethodView):
         Handle any exception that occurs, by returning an appropriate response,
         or re-raising the error.
         """
-        exception_handler = self.exception_handler
+        exception_handler = getattr(current_app, "EXCEPTION_HANDLER", exceptions.exception_handler)
         return exception_handler(exc)
