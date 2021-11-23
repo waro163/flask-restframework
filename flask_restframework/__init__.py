@@ -32,6 +32,9 @@ class RestFramework(object):
         app.AUTHENTICATION_CLASSES = perform_import(app.config.get("FLASK_RESTFRAMEWORK_AUTHENTICATION_CLASSES"))
         app.PERMISSION_CLASSES = perform_import(app.config.get("FLASK_RESTFRAMEWORK_PERMISSION_CLASSES"))
         app.EXCEPTION_HANDLER = import_string(app.config.get("FLASK_RESTFRAMEWORK_EXCEPTION_HANDLER"))
+        _throttle_handlers = app.config.get("FLASK_RESTFRAMEWORK_THROTTLE_HANDLERS")
+        if _throttle_handlers:
+            app.THROTTLE_HANDLERS = perform_throttle_import(_throttle_handlers)
 
         app.extensions[EXTENSION_NAME] = self
 
@@ -45,7 +48,29 @@ def perform_import(string_name):
         class_list = string_name
     
     return [import_string(item) for item in class_list]
+
+def perform_throttle_import(string_name):
+    if isinstance(string_name, str):
+        try:
+            class_list = json.loads(string_name)
+        except Exception:
+            raise Exception(string_name+r" string Must be list format: [{'class':'xxx','rate':'xxx/xxx'}',...]")
+    elif isinstance(string_name, (list, tuple)):
+        class_list = string_name
     
+    throttle_handlers = []
+    for item in class_list:
+        if not isinstance(item, dict):
+            raise Exception("throttle_handlers' item must be dict type")
+        throttle_handler = {"rate":item.get("rate")}
+        item_class = item.get("class")
+        if isinstance(item_class, str):
+            throttle_class = import_string(item_class)
+        else:
+            throttle_class = item_class
+        throttle_handler.update({"class":throttle_class})
+        throttle_handlers.append(throttle_handler)
+    return throttle_handlers
 
 def import_string(setting_name):
     try:
