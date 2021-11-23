@@ -7,7 +7,7 @@ class TestView(BaseTest):
         from .views import APIView
         view = APIView()
         self.assertIn("authentication_classes", dir(view))
-        self.assertEquals([], view.authentication_classes)
+        self.assertEqual([], view.authentication_classes)
 
     # def test_view_after_init(self):
     #     rf = RestFramework()
