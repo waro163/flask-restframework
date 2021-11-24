@@ -63,6 +63,19 @@ class NotFound(APIException):
     default_detail = 'Not found.'
     default_code = 'not_found'
 
+class Throttled(APIException):
+    status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    default_detail = 'Request was throttled.'
+    extra_detail_singular = 'Expected available in {wait} second.'
+    extra_detail_plural = 'Expected available in {wait} seconds.'
+    default_code = 'throttled'
+
+    def __init__(self, wait=None, detail=None, code=None):
+        if wait is not None:
+            detail= self.extra_detail_plural.format(wait)
+        self.wait = wait
+        super().__init__(detail, code)
+
 def exception_handler(exc:Exception):
     '''
     Returns the response that should be used for any given exception.
