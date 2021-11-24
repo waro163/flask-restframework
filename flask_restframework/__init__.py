@@ -20,6 +20,7 @@ class RestFramework(object):
                 raise Exception("cache must has .set(key, value) method")
             if not hasattr(cache, "get") or not callable(cache.get):
                 raise Exception("cache must has .get(key) method")
+            app.CACHE = cache
 
         if 'FLASK_RESTFRAMEWORK_USER_CLASS' not in app.config:
             warnings.warn(
