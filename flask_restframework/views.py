@@ -5,8 +5,8 @@ from . import exceptions
 class APIView(views.MethodView):
 
     authentication_classes = []
-    # throttle_classes = []
     permission_classes = []
+    throttle_handlers = []
 
     def dispatch_request(self, *args, **kwargs):
         try:
@@ -18,6 +18,7 @@ class APIView(views.MethodView):
     def initial(self):
         self.perform_authentication()
         self.check_permissions()
+        self.check_throttles()
 
     def get_authenticators(self):
         """
@@ -33,6 +34,18 @@ class APIView(views.MethodView):
         """
         global_perm_config = getattr(current_app,"PERMISSION_CLASSES",[])
         return [permission() for permission in self.permission_classes or global_perm_config]
+    
+    def get_throttles(self):
+        """
+        Instantiates and returns the list of throttles that this view uses.
+        """
+        global_thro_config = getattr(current_app, "THROTTLE_HANDLERS", [])
+        throttling_handlers = []
+        for throttle in self.throttle_handlers or global_thro_config:
+            throttle_class = throttle.get("class")
+            throttle_rate = throttle.get("rate")
+            throttling_handlers.append(throttle_class(throttle_rate))
+        return throttling_handlers
 
     def perform_authentication(self):
         self.successful_authenticated = False
@@ -71,6 +84,19 @@ class APIView(views.MethodView):
             exc.auth_header = self.get_authenticate_header()
             raise exc
         raise exceptions.PermissionDenied(detail=message, code=code)
+
+    def check_throttles(self):
+        """
+        Check if request should be throttled.
+        Raises an appropriate exception if the request is throttled.
+        """
+        throttle_durations = []
+        for throttle in self.get_throttles():
+            if not throttle.allow_request():
+                throttle_durations.append(throttle.wait())
+        if throttle_durations:
+            duration = max(durations, default=None)
+            raise exceptions.Throttled(duration)
 
     def get_authenticate_header(self):
         """
