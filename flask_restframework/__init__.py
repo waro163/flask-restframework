@@ -6,14 +6,20 @@ import warnings
 EXTENSION_NAME = "flask-restframework"
 
 class RestFramework(object):
-    def __init__(self,app=None) -> None:
+    def __init__(self,app=None,cache=None) -> None:
         super().__init__()
         if app:
-            self.init_app(app)
+            self.init_app(app,cache)
 
-    def init_app(self, app):
+    def init_app(self, app, cache=None):
 
         app.extensions = getattr(app, "extensions", {})
+
+        if cache:
+            if not hasattr(cache, "set") or not callable(cache.set):
+                raise Exception("cache must has .set(key, value) method")
+            if not hasattr(cache, "get") or not callable(cache.get):
+                raise Exception("cache must has .get(key) method")
 
         if 'FLASK_RESTFRAMEWORK_USER_CLASS' not in app.config:
             warnings.warn(
@@ -35,6 +41,8 @@ class RestFramework(object):
         _throttle_handlers = app.config.get("FLASK_RESTFRAMEWORK_THROTTLE_HANDLERS")
         if _throttle_handlers:
             app.THROTTLE_HANDLERS = perform_throttle_import(_throttle_handlers)
+            if not cache:
+                warnings.warn("throttle handlers will not work due to not configure cache")
 
         app.extensions[EXTENSION_NAME] = self
 
