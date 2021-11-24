@@ -124,7 +124,7 @@ class JWTAuthentication(BaseAuthentication):
         except Exception as e:
             raise exceptions.AuthenticationFailed(e.__str__())
 
-        passed, msg = self.check_auth_inf(**auth_inf)
+        passed, msg = self.check_auth_inf(**payload)
         if not passed:
             raise exceptions.AuthenticationFailed(msg)
 
