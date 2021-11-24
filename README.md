@@ -11,7 +11,7 @@ You can use this extension to develop your rest api quickly based on flask, each
 * Permission
 * Throttle(todo)
 
-and each of them can be customized yourself, all of those are revolved around `User`, so you can difine your own
+and each of them can be customized yourself, all of those are revolved around `User`, so you can define your own
 User class.
 
 # Example
