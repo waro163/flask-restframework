@@ -89,7 +89,7 @@ class TestJWTAuthentication(BaseFuncTest):
             self.assertIsInstance(e,AuthenticationFailed)
             self.assertIn("'id' field not found",e.__str__())
 
-    @mock.patch("flask_restframework.authentication.request",headers={"Authorization":"bearer "+base64.b64encode(b"waro163:passwd123").decode('utf-8')})
+    @mock.patch("flask_restframework.authentication.request")
     def test_normal_jwt_token(self, mock_header):
         self.app.config['JWT_SECRET'] = self.jwt_secret
         token = jwt.encode({"id": "1234abcd","iss":"test"}, self.jwt_secret, algorithm="HS256")
