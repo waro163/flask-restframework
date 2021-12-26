@@ -26,7 +26,7 @@ class BaseThrottle:
         if self.key is None:
             return True
 
-        self.history = self.cache.get(self.key, [])
+        self.history = self.cache.get(self.key) or []
         #  Drop any requests from the history which have now passed the throttle duration
         while self.history and self.history[-1] <= self.now - self.duration:
             self.history.pop()
