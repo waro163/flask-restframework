@@ -95,7 +95,7 @@ class APIView(views.MethodView):
             if not throttle.allow_request():
                 throttle_durations.append(throttle.wait())
         if throttle_durations:
-            duration = max(durations, default=None)
+            duration = max(throttle_durations, default=None)
             raise exceptions.Throttled(duration)
 
     def get_authenticate_header(self):
