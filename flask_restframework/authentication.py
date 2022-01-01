@@ -66,10 +66,11 @@ class BasicAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed(msg)
 
         try:
-            try:
-                auth_decoded = base64.b64decode(auth[1]).decode('utf-8')
-            except UnicodeDecodeError:
-                auth_decoded = base64.b64decode(auth[1]).decode('latin-1')
+            auth_decoded = base64.b64decode(auth[1]).decode('utf-8')
+            # try:
+            #     auth_decoded = base64.b64decode(auth[1]).decode('utf-8')
+            # except UnicodeDecodeError:
+            #     auth_decoded = base64.b64decode(auth[1]).decode('latin-1')
             auth_parts = auth_decoded.partition(':')
         except (TypeError, UnicodeDecodeError, binascii.Error):
             msg = 'Invalid basic header. Credentials not correctly base64 encoded.'

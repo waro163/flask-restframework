@@ -7,7 +7,7 @@ import base64
 import jwt
 from flask import g
 
-class TestBasicAuthentication(BaseTest):
+class TestBasicAuthentication(BaseFuncTest):
 
     @mock.patch("flask_restframework.authentication.request",headers={"Authorization":""})
     def test_empty_token(self, *args):
@@ -26,20 +26,25 @@ class TestBasicAuthentication(BaseTest):
     def test_wrong_base64_token(self, *args):
         basic_auth = BasicAuthentication()
         try:
-            # import pdb; pdb.set_trace()
             basic_auth.authenticate()
         except Exception as e:
             self.assertIsInstance(e,AuthenticationFailed)
             self.assertIn("not correctly base64 encoded", e.__str__())
 
-    @mock.patch("flask_restframework.authentication.request",headers={"Authorization":"basic "+base64.b64encode(b"waro163:passwd123").decode('utf-8')})
-    def test_base64_token(self, *args):
+    @mock.patch("flask_restframework.authentication.request")
+    def test_base64_token(self, mock_headers):
+        user_id = "waro163"
+        user_passwd = "passwd123"
+        mock_headers.headers = {"Authorization":"basic "+base64.b64encode(b"waro163:passwd123").decode('utf-8')}
         # for init user class
         rf = RestFramework()
         rf.init_app(self.app)
         basic_auth = BasicAuthentication()
-        basic_auth.authenticate()
+        usr,inf = basic_auth.authenticate()
         self.assertTrue(hasattr(g,"current_user"))
+        self.assertEqual(usr.id, user_id)
+        self.assertEqual(inf.get('id'), user_id)
+        self.assertEqual(inf.get('password'), user_passwd)
 
 
 class TestJWTAuthentication(BaseFuncTest):
