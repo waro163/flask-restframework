@@ -20,20 +20,20 @@ class MockUser:
         self.is_authenticated = True
 
 class TestAnonRateThrottle(BaseTest):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cache = MockCache()
+        rf = RestFramework()
+        rf.init_app(cls.app, cache)
 
     # @mock.patch('flask_restframework.throttling.g',current_user=None)
     def test_forbiden(self, *args):
-        cache = MockCache()
-        rf = RestFramework()
-        rf.init_app(self.app, cache)
         anon_throttle = AnonRateThrottle("0/s")
         throttle_result = anon_throttle.allow_request()
         self.assertFalse(throttle_result)
 
     def test_allow_then_forbiden(self, *args):
-        cache = MockCache()
-        rf = RestFramework()
-        rf.init_app(self.app, cache)
         anon_throttle = AnonRateThrottle("1/m")
         # import pdb; pdb.set_trace()
         throttle_result = anon_throttle.allow_request()
@@ -43,9 +43,6 @@ class TestAnonRateThrottle(BaseTest):
     
     @mock.patch('flask_restframework.throttling.g',current_user=MockUser("1234abcd"))
     def test_allow_for_user(self, *args):
-        cache = MockCache()
-        rf = RestFramework()
-        rf.init_app(self.app, cache)
         anon_throttle = AnonRateThrottle("0/s")
         # import pdb; pdb.set_trace()
         throttle_result = anon_throttle.allow_request()
