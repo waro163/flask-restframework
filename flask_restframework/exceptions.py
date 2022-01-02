@@ -1,5 +1,6 @@
 
 from flask import jsonify
+import math
 from . import status
 
 
@@ -72,7 +73,8 @@ class Throttled(APIException):
 
     def __init__(self, wait=None, detail=None, code=None):
         if wait is not None:
-            detail= self.extra_detail_plural.format(wait)
+            wait = math.ceil(wait)
+            detail= self.extra_detail_plural.format(wait=wait)
         self.wait = wait
         super().__init__(detail, code)
 
