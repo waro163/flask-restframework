@@ -27,12 +27,13 @@ class TestAnonRateThrottle(BaseTest):
         rf = RestFramework()
         rf.init_app(cls.app, cache)
 
-    # @mock.patch('flask_restframework.throttling.g',current_user=None)
+    @mock.patch('flask_restframework.throttling.g',current_user=None)
     def test_forbiden(self, *args):
         anon_throttle = AnonRateThrottle("0/s")
         throttle_result = anon_throttle.allow_request()
         self.assertFalse(throttle_result)
 
+    @mock.patch('flask_restframework.throttling.g',current_user=None)
     def test_allow_then_forbiden(self, *args):
         anon_throttle = AnonRateThrottle("1/m")
         # import pdb; pdb.set_trace()

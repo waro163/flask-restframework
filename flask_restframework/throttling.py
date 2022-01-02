@@ -97,8 +97,7 @@ class AnonRateThrottle(BaseThrottle):
     scope = 'anon'
 
     def get_cache_key(self):
-        if hasattr(g,'current_user') and g.current_user.is_authenticated:
-        # if g.current_user and g.current_user.is_authenticated:
+        if g.current_user and g.current_user.is_authenticated:
             return None # Only throttle unauthenticated requests.
 
         return self.cache_format % {
